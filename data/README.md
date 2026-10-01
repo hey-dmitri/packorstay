@@ -32,7 +32,7 @@ to the numbers it is about.
 | `metros-counties.json` | The counties making up each metro | Census CBSA delineation |
 | `federal.json` | Federal brackets, deductions, credits, FICA, SALT and mortgage caps | IRS, SSA |
 | `states.json` | State income tax for all 50 states and DC, with each state's own recorded source | State revenue departments and statutes; first compiled from Tax Foundation |
-| `local-income-tax.json` | 13 named cities, every Indiana county, state averages elsewhere | City revenue departments, Indiana DOR |
+| `local-income-tax.json` | 13 named cities, every Indiana and Maryland county, state averages elsewhere | City revenue departments, Indiana DOR, Comptroller of Maryland |
 | `housing.json` | Median rent by size, median home value, effective property tax, income curves | Census ACS |
 | `transport.json` | Vehicles per adult, cost per vehicle | Census ACS, BLS |
 | `spending.json` | Household spending profiles by income band, and the price factors that restate them | BLS CES, BLS CPI, Case-Shiller |

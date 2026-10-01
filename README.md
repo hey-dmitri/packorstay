@@ -219,8 +219,12 @@ Total data cost: **$0**. No paid feeds, no runtime API calls.
    counties' rates weighted by population, and the Indiana sides of Chicago,
    Louisville and Cincinnati — which were paying nothing at all — are charged.
    Cleveland, Pittsburgh, Louisville, Kansas City, St. Louis, Baltimore and
-   Portland all carry their own published rates. What remains on a state
-   average is the smaller cities, where the average is much closer to right.
+   Portland all carry their own published rates. Maryland's metros carry their
+   counties' 2026 rates weighted by population, charged on Maryland taxable
+   income as the state does. Every side of a metro that crosses a state line
+   carries its own state's local tax; until dataset 2026.30 only the primary
+   state's side did. What remains on a state average is the smaller cities,
+   where the average is much closer to right.
 
 ### Rebuilding the dataset
 

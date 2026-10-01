@@ -437,7 +437,8 @@ describe('local tax coverage as described', () => {
   const named = allLocalJurisdictions().filter((j) => !j.isStateAverage);
 
   it('has more rules than cities, because Portland levies two', () => {
-    const nonIndiana = named.filter((j) => !j.id.startsWith('in-'));
+    // Indiana's and Maryland's per-metro county rates are not cities.
+    const nonIndiana = named.filter((j) => !j.id.startsWith('in-') && !j.id.startsWith('md-'));
     const cities = new Set(nonIndiana.map((j) => (j.id.startsWith('portland-') ? 'portland' : j.id)));
     expect(nonIndiana.length).toBe(cities.size + 1);
     expect(cities.size).toBe(13);

@@ -11,10 +11,16 @@
       "url": "https://taxfoundation.org/data/all/state/state-income-tax-rates-2026/",
       "licence": "CC BY-NC 4.0 — satisfied; this project is permanently non-commercial",
       "confidence": "secondary; underlying figures are 2023, the latest available"
+    },
+    {
+      "name": "Comptroller of Maryland, \"Withholding Tax Facts, January 2026 - December 2026\" — county rates; weighted by Census ACS 2024 5-year county population (B01003)",
+      "url": "https://www.marylandcomptroller.gov/content/dam/mdcomp/tax/legal-publications/facts/withholding-tax-facts-2026.pdf",
+      "confidence": "primary"
     }
   ],
   "limitations": [
-    "Thirteen cities carry their own published rate, through fourteen rules — Portland levies two, the Multnomah County preschool tax and the Metro housing tax. The others are New York City, Yonkers, Philadelphia, Detroit, Columbus, Cincinnati, Cleveland, Pittsburgh, Louisville, Kansas City, St. Louis and Baltimore. Every Indiana metro carries its counties' rates weighted by population. Everywhere else uses the state average effective rate.",
+    "Thirteen cities carry their own published rate, through fourteen rules — Portland levies two, the Multnomah County preschool tax and the Metro housing tax. The others are New York City, Yonkers, Philadelphia, Detroit, Columbus, Cincinnati, Cleveland, Pittsburgh, Louisville, Kansas City, St. Louis and Baltimore. Every Indiana and Maryland metro carries its counties' rates weighted by population. Everywhere else uses the state average effective rate.",
+    "In a metro that crosses a state line, each state's side carries that state's own local tax — the Maryland side of Washington its counties' rates, the Kentucky side of Cincinnati the Kentucky average — and nothing from the other state.",
     "Where a state average is still used it is for smaller cities, and the average is much closer to the truth there than it was for the large ones. It remains an average: an individual city may be above or below it.",
     "Maryland's counties tax Maryland taxable income, and that is the base used here, for Baltimore City and for the counties alike. Outside Baltimore City the rate is the counties' own 2026 rates averaged by population; they run from 2.25% to 3.30%.",
     "Indiana fixes your county on 1 January and does not change it when you move, so somebody moving into Indiana owes no county tax in their first year unless they already worked there. That is not modelled, so a first year is overstated.",
@@ -554,6 +560,66 @@
       "isStateAverage": true,
       "source": "https://www.in.gov/dor/files/dn01.pdf",
       "note": "Indiana taxes by county of residence, and this is the population-weighted average of the counties in this metro. An individual county may be well above or below it — the state ranges from 0.50% to 3.00%. Indiana also fixes your county on 1 January and does not change it when you move, so someone moving into Indiana owes no county tax in their first year unless they already worked there; that is not modelled here, so a first year is overstated."
+    },
+    "md-25180": {
+      "id": "md-25180",
+      "kind": "flatRate",
+      "name": "Washington County",
+      "stateCode": "MD",
+      "rate": 0.0295,
+      "appliesTo": "stateTaxableIncome",
+      "isStateAverage": false,
+      "source": "Comptroller of Maryland, Withholding Tax Facts January 2026 - December 2026, county rates; weighted by Census ACS 2024 county population — https://www.marylandcomptroller.gov/content/dam/mdcomp/tax/legal-publications/facts/withholding-tax-facts-2026.pdf",
+      "note": "Maryland taxes by county of residence. This is Washington County's 2026 rate, charged on Maryland taxable income.",
+      "confidence": "primary — the Comptroller's own 2026 county rates"
+    },
+    "md-30500": {
+      "id": "md-30500",
+      "kind": "flatRate",
+      "name": "Calvert and St. Mary's counties",
+      "stateCode": "MD",
+      "rate": 0.032,
+      "appliesTo": "stateTaxableIncome",
+      "isStateAverage": false,
+      "source": "Comptroller of Maryland, Withholding Tax Facts January 2026 - December 2026, county rates; weighted by Census ACS 2024 county population — https://www.marylandcomptroller.gov/content/dam/mdcomp/tax/legal-publications/facts/withholding-tax-facts-2026.pdf",
+      "note": "Maryland taxes by county of residence, and this is the population-weighted 2026 rate of the Maryland counties in this metro, charged on Maryland taxable income. Your own county may be a little above or below it.",
+      "confidence": "primary — the Comptroller's own 2026 county rates"
+    },
+    "md-37980": {
+      "id": "md-37980",
+      "kind": "flatRate",
+      "name": "Cecil County",
+      "stateCode": "MD",
+      "rate": 0.0274,
+      "appliesTo": "stateTaxableIncome",
+      "isStateAverage": false,
+      "source": "Comptroller of Maryland, Withholding Tax Facts January 2026 - December 2026, county rates; weighted by Census ACS 2024 county population — https://www.marylandcomptroller.gov/content/dam/mdcomp/tax/legal-publications/facts/withholding-tax-facts-2026.pdf",
+      "note": "Maryland taxes by county of residence. This is Cecil County's 2026 rate, charged on Maryland taxable income.",
+      "confidence": "primary — the Comptroller's own 2026 county rates"
+    },
+    "md-41540": {
+      "id": "md-41540",
+      "kind": "flatRate",
+      "name": "Wicomico and Somerset counties",
+      "stateCode": "MD",
+      "rate": 0.032,
+      "appliesTo": "stateTaxableIncome",
+      "isStateAverage": false,
+      "source": "Comptroller of Maryland, Withholding Tax Facts January 2026 - December 2026, county rates; weighted by Census ACS 2024 county population — https://www.marylandcomptroller.gov/content/dam/mdcomp/tax/legal-publications/facts/withholding-tax-facts-2026.pdf",
+      "note": "Maryland taxes by county of residence, and this is the population-weighted 2026 rate of the Maryland counties in this metro, charged on Maryland taxable income. Your own county may be a little above or below it.",
+      "confidence": "primary — the Comptroller's own 2026 county rates"
+    },
+    "md-47900": {
+      "id": "md-47900",
+      "kind": "flatRate",
+      "name": "Montgomery, Prince George's, Charles and Frederick counties",
+      "stateCode": "MD",
+      "rate": 0.031606,
+      "appliesTo": "stateTaxableIncome",
+      "isStateAverage": false,
+      "source": "Comptroller of Maryland, Withholding Tax Facts January 2026 - December 2026, county rates; weighted by Census ACS 2024 county population — https://www.marylandcomptroller.gov/content/dam/mdcomp/tax/legal-publications/facts/withholding-tax-facts-2026.pdf",
+      "note": "Maryland taxes by county of residence, and this is the population-weighted 2026 rate of the Maryland counties in this metro, charged on Maryland taxable income. Your own county may be a little above or below it.",
+      "confidence": "primary — the Comptroller's own 2026 county rates"
     }
   },
   "byMetro": {
@@ -675,7 +741,19 @@
         "label": "Elsewhere in the metro (OH average)"
       },
       {
+        "jurisdictionId": "avg-KY",
+        "optional": false,
+        "defaultApplies": true
+      },
+      {
         "jurisdictionId": "in-17140",
+        "optional": false,
+        "defaultApplies": true
+      }
+    ],
+    "17300": [
+      {
+        "jurisdictionId": "avg-KY",
         "optional": false,
         "defaultApplies": true
       }
@@ -831,7 +909,7 @@
     ],
     "25180": [
       {
-        "jurisdictionId": "avg-MD",
+        "jurisdictionId": "md-25180",
         "optional": false,
         "defaultApplies": true
       }
@@ -839,6 +917,18 @@
     "25420": [
       {
         "jurisdictionId": "avg-PA",
+        "optional": false,
+        "defaultApplies": true
+      }
+    ],
+    "26580": [
+      {
+        "jurisdictionId": "avg-KY",
+        "optional": false,
+        "defaultApplies": true
+      },
+      {
+        "jurisdictionId": "avg-OH",
         "optional": false,
         "defaultApplies": true
       }
@@ -925,7 +1015,7 @@
     ],
     "30500": [
       {
-        "jurisdictionId": "avg-MD",
+        "jurisdictionId": "md-30500",
         "optional": false,
         "defaultApplies": true
       }
@@ -1001,6 +1091,13 @@
         "prompt": "Do you live in Yonkers?"
       }
     ],
+    "36540": [
+      {
+        "jurisdictionId": "avg-IA",
+        "optional": false,
+        "defaultApplies": true
+      }
+    ],
     "36980": [
       {
         "jurisdictionId": "avg-KY",
@@ -1030,6 +1127,11 @@
         "defaultApplies": false,
         "group": "locality",
         "label": "Elsewhere in the metro (PA average)"
+      },
+      {
+        "jurisdictionId": "md-37980",
+        "optional": false,
+        "defaultApplies": true
       }
     ],
     "38300": [
@@ -1108,7 +1210,7 @@
     ],
     "41540": [
       {
-        "jurisdictionId": "avg-MD",
+        "jurisdictionId": "md-41540",
         "optional": false,
         "defaultApplies": true
       }
@@ -1169,9 +1271,30 @@
         "defaultApplies": true
       }
     ],
+    "47900": [
+      {
+        "jurisdictionId": "md-47900",
+        "optional": false,
+        "defaultApplies": true
+      }
+    ],
     "47940": [
       {
         "jurisdictionId": "avg-IA",
+        "optional": false,
+        "defaultApplies": true
+      }
+    ],
+    "48260": [
+      {
+        "jurisdictionId": "avg-OH",
+        "optional": false,
+        "defaultApplies": true
+      }
+    ],
+    "48540": [
+      {
+        "jurisdictionId": "avg-OH",
         "optional": false,
         "defaultApplies": true
       }

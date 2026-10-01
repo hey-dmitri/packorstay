@@ -24,7 +24,10 @@ export const metadata: Metadata = {
  * is one more rule than there are cities.
  */
 const NAMED_LOCAL = (() => {
-  const named = allLocalJurisdictions().filter((j) => !j.isStateAverage && !j.id.startsWith('in-'));
+  // Indiana's and Maryland's per-metro county rates are counties, not cities.
+  const named = allLocalJurisdictions().filter(
+    (j) => !j.isStateAverage && !j.id.startsWith('in-') && !j.id.startsWith('md-'),
+  );
   const cities = new Set(named.map((j) => (j.id.startsWith('portland-') ? 'portland' : j.id)));
   return { cities: cities.size, rules: named.length };
 })();
@@ -79,8 +82,10 @@ export default function DataPage() {
             New York City, Yonkers, Philadelphia, Detroit, Columbus, Cincinnati, Cleveland,
             Pittsburgh, Louisville, Kansas City, St. Louis, Baltimore and Portland are transcribed
             from the levying authority, with the source recorded — {NAMED_LOCAL.rules} rules in
-            all, because Portland has two. Every Indiana metro carries its counties&rsquo; rates
-            weighted by population. What is left on an average is the smaller cities, where the
+            all, because Portland has two. Every Indiana and Maryland metro carries its
+            counties&rsquo; rates weighted by population, and in a metro that crosses a state line
+            each side carries its own state&rsquo;s local tax. What is left on an average is the
+            smaller cities, where the
             average is much closer to the truth. A documented average is honest; a remembered city
             rate would not be.
           </li>

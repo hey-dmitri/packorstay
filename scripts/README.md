@@ -19,7 +19,7 @@ rebuilds offline with no API key.
 | `build-housing-transport.mjs` | Census ACS | `housing.json`, `transport.json` |
 | `build-spending.mjs` | BLS CES, BLS CPI, Case-Shiller | `spending.json` |
 | `build-state-tax-rules.mjs` | State revenue departments and statutes | `federal.json`, `states.json` |
-| `build-local-income-tax.mjs` | City revenue departments, Indiana DOR | `local-income-tax.json` |
+| `build-local-income-tax.mjs` | City revenue departments, Indiana DOR, Comptroller of Maryland | `local-income-tax.json` |
 | `build-sales-tax.mjs` | Tax Foundation, state statutes | `sales-tax.json` (reference only) |
 | `build-all.mjs` | — | Runs every builder above, in order |
 | `refresh-sources.mjs` | — | Re-downloads the upstream responses into `sources/` |

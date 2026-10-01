@@ -15,8 +15,10 @@
  *                             Louisville, Kansas City, St. Louis, Baltimore,
  *                             and Portland twice — Multnomah County's preschool
  *                             tax and the Metro housing tax
- *   Per county, weighted:     every Indiana metro, by population; Maryland's
- *                             statewide average, from its counties' 2026 rates
+ *   Per county, weighted:     every Indiana and Maryland metro, by population,
+ *                             and Maryland's statewide average
+ *   Every side of a metro:    a split metro carries each state's local tax on
+ *                             that state's side, not only the primary state's
  *   State-average fallback:   AL, IA, KY, MI, MO, OH, OR, PA — the smaller
  *                             cities, where an average is much closer to right
  *
@@ -769,6 +771,68 @@ jurisdictions['in-statewide'] = {
 const CITY_BY_METRO = Object.fromEntries(CITY_TAXES.map((c) => [c.metroId, c]));
 const PORTLAND_METRO_ID = '38900';
 
+/*
+ * MARYLAND, METRO BY METRO. Each Maryland metro carries the population-weighted
+ * 2026 rate of its own Maryland counties, the way every Indiana metro does —
+ * which matters most on the Maryland side of Washington, where Montgomery and
+ * Prince George's both levy 3.20% and hold two million people.
+ *
+ * Baltimore is the exception: its "elsewhere in the metro" choice keeps
+ * `avg-MD`, because share links store that answer by id. Rest of Maryland
+ * takes the statewide average, as rural Indiana does.
+ */
+const metrosCounties = JSON.parse(readFileSync(resolve(DATA_DIR, 'metros-counties.json'), 'utf8'));
+const BALTIMORE_CITY_FIPS = '24510';
+const BALTIMORE_METRO_ID = '12580';
+
+function marylandJurisdictionFor(metro) {
+  if (metro.id === BALTIMORE_METRO_ID) return 'avg-MD';
+  const fips = (metrosCounties.byMetro[metro.id] ?? [])
+    .filter((c) => c.state === 'MD' && c.fips !== BALTIMORE_CITY_FIPS)
+    .map((c) => c.fips);
+  if (!fips.length) return 'avg-MD'; // Rest of Maryland lists no counties of its own.
+
+  const id = `md-${metro.id}`;
+  const names = fips.map((f) => MARYLAND_COUNTIES[f]?.name ?? f);
+  jurisdictions[id] ??= {
+    id,
+    kind: 'flatRate',
+    name: `${listOf(names)} ${names.length === 1 ? 'County' : 'counties'}`,
+    stateCode: 'MD',
+    rate: marylandWeightedRate(fips),
+    appliesTo: 'stateTaxableIncome',
+    isStateAverage: false,
+    source: MARYLAND_SOURCE,
+    note:
+      names.length === 1
+        ? `Maryland taxes by county of residence. This is ${names[0]} County's 2026 rate, charged on Maryland taxable income.`
+        : 'Maryland taxes by county of residence, and this is the population-weighted 2026 rate of the Maryland counties in this metro, charged on Maryland taxable income. Your own county may be a little above or below it.',
+    confidence: "primary — the Comptroller's own 2026 county rates",
+  };
+  return id;
+}
+
+/*
+ * THE TAX ONE STATE'S SIDE OF A METRO CARRIES when nothing more specific
+ * applies: the state average, or Maryland's counties. Null where that state
+ * has no local income tax there at all.
+ *
+ * Used for the PRIMARY state of a metro and for every OTHER state it spans.
+ * It used to run for the primary state only, and the engine narrows a metro's
+ * taxes to the state the reader lives in — so every non-primary side of a
+ * metro silently paid nothing: the Maryland side of Washington and of
+ * Philadelphia, the Kentucky sides of Cincinnati, Clarksville and Huntington,
+ * the Iowa side of Omaha, the Ohio sides of Huntington, Wheeling and Weirton.
+ * All in states whose every other metro carries a local tax. A Montgomery
+ * County resident on $150,000 was quoted no county tax at all.
+ */
+function sideOfMetro(state, metro) {
+  if (state === 'MD') return marylandJurisdictionFor(metro);
+  if (STATEWIDE_LOCAL_TAX.has(state)) return `avg-${state}`;
+  if (CITY_SPECIFIC_METROS[state]?.includes(metro.id)) return `avg-${state}`;
+  return null;
+}
+
 const byMetro = {};
 const NEW_YORK_METRO = '35620';
 
@@ -845,10 +909,20 @@ for (const metro of Object.values(metrosMeta.metros)) {
         label: `Elsewhere in the metro (${state} average)`,
       },
     );
-  } else if (STATEWIDE_LOCAL_TAX.has(state)) {
-    entries.push({ jurisdictionId: `avg-${state}`, optional: false, defaultApplies: true });
-  } else if (CITY_SPECIFIC_METROS[state]?.includes(metro.id)) {
-    entries.push({ jurisdictionId: `avg-${state}`, optional: false, defaultApplies: true });
+  } else {
+    const id = sideOfMetro(state, metro);
+    if (id) entries.push({ jurisdictionId: id, optional: false, defaultApplies: true });
+  }
+
+  /*
+   * Every other state the metro spans. Indiana has its own block below, and
+   * New York's tax reaches only New York City and Yonkers, both inside the
+   * New York-led metro, so neither belongs here.
+   */
+  for (const other of metro.states) {
+    if (other === state || other === 'IN' || other === 'NY') continue;
+    const id = sideOfMetro(other, metro);
+    if (id) entries.push({ jurisdictionId: id, optional: false, defaultApplies: true });
   }
 
   /*
@@ -943,9 +1017,15 @@ writeDataset(
           licence: 'CC BY-NC 4.0 — satisfied; this project is permanently non-commercial',
           confidence: 'secondary; underlying figures are 2023, the latest available',
         },
+        {
+          name: 'Comptroller of Maryland, "Withholding Tax Facts, January 2026 - December 2026" — county rates; weighted by Census ACS 2024 5-year county population (B01003)',
+          url: 'https://www.marylandcomptroller.gov/content/dam/mdcomp/tax/legal-publications/facts/withholding-tax-facts-2026.pdf',
+          confidence: 'primary',
+        },
       ],
       limitations: [
-        'Thirteen cities carry their own published rate, through fourteen rules — Portland levies two, the Multnomah County preschool tax and the Metro housing tax. The others are New York City, Yonkers, Philadelphia, Detroit, Columbus, Cincinnati, Cleveland, Pittsburgh, Louisville, Kansas City, St. Louis and Baltimore. Every Indiana metro carries its counties\' rates weighted by population. Everywhere else uses the state average effective rate.',
+        'Thirteen cities carry their own published rate, through fourteen rules — Portland levies two, the Multnomah County preschool tax and the Metro housing tax. The others are New York City, Yonkers, Philadelphia, Detroit, Columbus, Cincinnati, Cleveland, Pittsburgh, Louisville, Kansas City, St. Louis and Baltimore. Every Indiana and Maryland metro carries its counties\' rates weighted by population. Everywhere else uses the state average effective rate.',
+        'In a metro that crosses a state line, each state\'s side carries that state\'s own local tax — the Maryland side of Washington its counties\' rates, the Kentucky side of Cincinnati the Kentucky average — and nothing from the other state.',
         'Where a state average is still used it is for smaller cities, and the average is much closer to the truth there than it was for the large ones. It remains an average: an individual city may be above or below it.',
         'Maryland\'s counties tax Maryland taxable income, and that is the base used here, for Baltimore City and for the counties alike. Outside Baltimore City the rate is the counties\' own 2026 rates averaged by population; they run from 2.25% to 3.30%.',
         'Indiana fixes your county on 1 January and does not change it when you move, so somebody moving into Indiana owes no county tax in their first year unless they already worked there. That is not modelled, so a first year is overstated.',

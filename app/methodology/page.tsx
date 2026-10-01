@@ -756,8 +756,11 @@ answer          =  in your pocket THERE  −  in your pocket HERE`}</pre>
             rates, and you are asked whether you live inside the city, because a metro is much
             larger than the city at its centre. Cleveland, Pittsburgh, Louisville, Kansas City,
             St. Louis, Baltimore and Portland now carry their own rates too, and every Indiana
-            metro carries its counties&rsquo; rates weighted by population. What is left on a state
-            average is the smaller cities, where the average is much closer to the truth.
+            and Maryland metro carries its counties&rsquo; rates weighted by population. Where a
+            metro crosses a state line, each side carries its own state&rsquo;s local tax &mdash;
+            until October 2026 only the first state&rsquo;s side did, so the Maryland side of
+            Washington paid no county tax at all. What is left on a state average is the smaller
+            cities, where the average is much closer to the truth.
           </li>
           <li>
             <strong>Where two people earn, the split is assumed to be even.</strong> The form asks
