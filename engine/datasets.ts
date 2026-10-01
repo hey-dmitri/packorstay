@@ -383,6 +383,17 @@ const LOADERS: Record<string, () => Promise<DatasetBundle>> = {
     states: (await import('../data/2026.28/states.json')).default,
     transport: (await import('../data/2026.28/transport.json')).default,
   }),
+  '2026.29': async () => ({
+    version: '2026.29',
+    federal: (await import('../data/2026.29/federal.json')).default,
+    housing: (await import('../data/2026.29/housing.json')).default,
+    localTax: (await import('../data/2026.29/local-income-tax.json')).default,
+    metros: (await import('../data/2026.29/metros.json')).default,
+    salesTax: (await import('../data/2026.29/sales-tax.json')).default,
+    spending: (await import('../data/2026.29/spending.json')).default,
+    states: (await import('../data/2026.29/states.json')).default,
+    transport: (await import('../data/2026.29/transport.json')).default,
+  }),
 };
 
 /** Oldest first, which is the order the releases were cut in. */
