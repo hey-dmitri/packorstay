@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useLayoutEffect, useState } from 'react';
 
 /** Fast out, slow in — the number decelerates into its final value. */
 function easeOutCubic(t: number): number {
@@ -28,12 +28,28 @@ function prefersReducedMotion(): boolean {
  * off once the reveal is over.
  */
 export function useCountUp(value: number, animate: boolean, durationMs = 700): number {
-  // Lazy initialiser, not an effect: starting at zero on the very first render
-  // avoids a single frame showing the final number before motion begins.
-  const [rolled, setRolled] = useState<number | null>(() => (animate ? 0 : null));
+  /*
+   * STARTS ON THE REAL VALUE, NOT ZERO.
+   *
+   * This used to start at 0 so that no frame showed the final figure before the
+   * roll began. But the answer page is rendered on the server, and on the
+   * server no animation ever runs — so the HTML a visitor saw before the
+   * scripts loaded, and everything that reads the raw page, said "would leave
+   * you $0 a year better off". And a reduced-motion visitor, for whom the
+   * effect below returns early, sat on $0 for the whole 1.2s the reveal flag
+   * stays up.
+   *
+   * So the true value is the default, and the drop to zero happens in a layout
+   * effect: after React has the DOM but before the browser paints it, so an
+   * answer arriving by client navigation still never shows its final figure
+   * first. On a direct visit the server's real number is replaced by the roll
+   * once the scripts are in — the same number, arriving again.
+   */
+  const [rolled, setRolled] = useState<number | null>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!animate || prefersReducedMotion()) return;
+    setRolled(0);
 
     const start = performance.now();
     let frame = requestAnimationFrame(function step(now) {
@@ -43,7 +59,12 @@ export function useCountUp(value: number, animate: boolean, durationMs = 700): n
       if (progress < 1) frame = requestAnimationFrame(step);
     });
 
-    return () => cancelAnimationFrame(frame);
+    return () => {
+      cancelAnimationFrame(frame);
+      // Cut short — by an edit mid-roll, or the reveal flag dropping — means
+      // the real value, never a frozen partial one.
+      setRolled(null);
+    };
   }, [value, animate, durationMs]);
 
   // Once the reveal is over, or if motion is off, always show the true value.
