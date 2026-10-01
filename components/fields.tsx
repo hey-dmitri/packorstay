@@ -2,6 +2,8 @@
 
 import { useEffect, useId, useRef, useState } from 'react';
 
+import { typedDollars } from '@/lib/typed-dollars';
+
 const labelClass = 'mb-1 block text-[0.8rem] font-semibold uppercase tracking-[0.09em]';
 const labelStyle = { color: 'var(--muted)' } as const;
 
@@ -232,9 +234,7 @@ export function MoneyField({
           }}
           value={value === 0 ? '' : value.toLocaleString('en-US')}
           onChange={(e) => {
-            const digits = e.target.value.replace(/[^0-9]/g, '');
-            const next = digits === '' ? 0 : Number(digits);
-            onChange(Math.min(Math.max(next, min), max));
+            onChange(Math.min(Math.max(typedDollars(e.target.value), min), max));
           }}
         />
         {suffix && (
