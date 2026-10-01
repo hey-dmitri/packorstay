@@ -15,15 +15,18 @@
  *                             Louisville, Kansas City, St. Louis, Baltimore,
  *                             and Portland twice — Multnomah County's preschool
  *                             tax and the Metro housing tax
- *   Per county, weighted:     every Indiana metro, by population
- *   State-average fallback:   AL, IA, KY, MD, MI, MO, OH, OR, PA — the smaller
+ *   Per county, weighted:     every Indiana metro, by population; Maryland's
+ *                             statewide average, from its counties' 2026 rates
+ *   State-average fallback:   AL, IA, KY, MI, MO, OH, OR, PA — the smaller
  *                             cities, where an average is much closer to right
  *
  * The fallback uses Tax Foundation's average effective local rate as a share
- * of AGI for that state. That is accurate where local rates are uniform
- * (Maryland's counties all sit between 2.25% and 3.20% against a 2.4%
- * average) and badly wrong for concentrated high-rate cities — Philadelphia
- * levies 3.74% against a Pennsylvania average of 0.99%.
+ * of AGI for that state, charged on gross pay as the nearest thing to AGI.
+ * That is accurate where local rates are uniform and badly wrong for
+ * concentrated high-rate cities — Philadelphia levies 3.74% against a
+ * Pennsylvania average of 0.99%. Maryland left it because its counties tax
+ * Maryland taxable income, and an AGI-share rate on that base takes the
+ * deduction off twice; see MARYLAND_COUNTIES.
  *
  * Every city rate here is transcribed from that city's own revenue department
  * or, for New York City and Yonkers, from the state form that carries the
@@ -190,8 +193,16 @@ const CITY_TAXES = [
     prompt: 'Do you live inside Baltimore City?',
     source:
       'Comptroller of Maryland, Withholding Tax Facts January 2026 - December 2026 — https://www.marylandcomptroller.gov/content/dam/mdcomp/tax/legal-publications/facts/withholding-tax-facts-2026.pdf',
-    note:
-      'Baltimore City local income tax, 3.20% for 2026. Maryland levies this on Maryland TAXABLE income rather than on gross, so applying it to gross overstates it by roughly the deduction times the rate — about $190 a year at $150,000. That is far smaller than the error it replaces: the Maryland state average is 2.40%, understating a Baltimore City resident by about $1,200 a year.',
+    /*
+     * ON MARYLAND TAXABLE INCOME, NOT GROSS. The Comptroller says so in the
+     * document above: "Local tax is based on taxable income and not on
+     * Maryland state tax." This was charged on gross, and its note admitted
+     * it — about $190 a year too much at $150,000, more for a family, whose
+     * exemptions are larger. Indiana's counties already used the state's
+     * taxable income; Maryland's now share that mechanism.
+     */
+    appliesTo: 'stateTaxableIncome',
+    note: 'Baltimore City local income tax, 3.20% for 2026, charged on Maryland taxable income — after the Maryland deduction and exemptions — as the Comptroller computes it.',
   },
 ];
 
@@ -499,6 +510,104 @@ const INDIANA_SOURCE = 'https://www.in.gov/dor/files/dn01.pdf';
 const INDIANA_NOTE =
   'Indiana taxes by county of residence, and this is the population-weighted average of the counties in this metro. An individual county may be well above or below it — the state ranges from 0.50% to 3.00%. Indiana also fixes your county on 1 January and does not change it when you move, so someone moving into Indiana owes no county tax in their first year unless they already worked there; that is not modelled here, so a first year is overstated.';
 
+/**
+ * MARYLAND'S COUNTY INCOME TAX, county by county.
+ *
+ * Maryland was on Tax Foundation's 2.40% average, charged on gross pay. Two
+ * things were wrong with that, and fixing either alone would have made it
+ * worse.
+ *
+ * THE BASE. Maryland's counties tax Maryland TAXABLE income — "Local tax is
+ * based on taxable income and not on Maryland state tax", in the
+ * Comptroller's own withholding facts below — not the whole paycheque. So the
+ * county rate goes on the same figure the state rate does, after the
+ * deduction and exemptions, the way Indiana's counties already did.
+ *
+ * THE RATE. Tax Foundation's 2.40% is an effective rate "expressed as a
+ * percentage of AGI" (footnote (a), in the source snapshot). That is already
+ * net of Maryland's deduction and exemptions: it is the county rates, around
+ * 3.1%, spread across a broader base. Moving it onto taxable income without
+ * changing it would have taken those allowances off twice. So the average is
+ * rebuilt from what the counties actually levy, weighted by population, the
+ * same method Indiana's counties use.
+ *
+ * Rates: Comptroller of Maryland, "Withholding Tax Facts, January 2026 -
+ * December 2026", COUNTY RATES. Every county is between 2.25% (Worcester) and
+ * 3.30% (Dorchester, Kent).
+ *
+ * TWO COUNTIES ARE GRADUATED, and carry one rate here. Anne Arundel charges
+ * 2.70% on the first $50,000 of taxable income ($75,000 joint), 2.94% to
+ * $400,000 ($480,000) and 3.20% above. Frederick charges 2.25% to $25,000,
+ * 2.75% to $50,000 ($100,000 joint), 2.96% to $150,000 ($250,000) and 3.20%
+ * above. Each carries its middle band, which is where most of the people the
+ * calculator is used for have their top dollar; a household near either end
+ * is off by at most about a quarter of a point.
+ *
+ * Populations: Census ACS 2024 5-year estimates, table B01003, Maryland
+ * counties (api.census.gov/data/2024/acs/acs5, retrieved 2026-10-01). They
+ * only set the weights, so a year's drift in them moves an average by a
+ * hundredth of a point at most.
+ */
+const MARYLAND_COUNTIES = {
+  '24001': { name: 'Allegany', rate: 0.032, population: 67_452 },
+  '24003': { name: 'Anne Arundel', rate: 0.0294, population: 598_166 },
+  '24005': { name: 'Baltimore County', rate: 0.032, population: 850_796 },
+  '24009': { name: 'Calvert', rate: 0.032, population: 94_313 },
+  '24011': { name: 'Caroline', rate: 0.032, population: 33_669 },
+  '24013': { name: 'Carroll', rate: 0.0303, population: 175_321 },
+  '24015': { name: 'Cecil', rate: 0.0274, population: 104_960 },
+  '24017': { name: 'Charles', rate: 0.0303, population: 170_527 },
+  '24019': { name: 'Dorchester', rate: 0.033, population: 32_754 },
+  '24021': { name: 'Frederick', rate: 0.0296, population: 287_048 },
+  '24023': { name: 'Garrett', rate: 0.0265, population: 28_615 },
+  '24025': { name: 'Harford', rate: 0.0306, population: 263_757 },
+  '24027': { name: 'Howard', rate: 0.032, population: 336_328 },
+  '24029': { name: 'Kent', rate: 0.033, population: 19_346 },
+  '24031': { name: 'Montgomery', rate: 0.032, population: 1_065_949 },
+  '24033': { name: "Prince George's", rate: 0.032, population: 959_754 },
+  '24035': { name: "Queen Anne's", rate: 0.032, population: 51_825 },
+  '24037': { name: "St. Mary's", rate: 0.032, population: 115_126 },
+  '24039': { name: 'Somerset', rate: 0.032, population: 24_822 },
+  '24041': { name: 'Talbot', rate: 0.024, population: 37_917 },
+  '24043': { name: 'Washington', rate: 0.0295, population: 155_709 },
+  '24045': { name: 'Wicomico', rate: 0.032, population: 104_914 },
+  '24047': { name: 'Worcester', rate: 0.0225, population: 53_700 },
+  // Baltimore City is a county-equivalent, and is its own option in the
+  // Baltimore metro (CITY_TAXES above), so it stays out of every average.
+};
+
+const MARYLAND_SOURCE =
+  'Comptroller of Maryland, Withholding Tax Facts January 2026 - December 2026, county rates; weighted by Census ACS 2024 county population — https://www.marylandcomptroller.gov/content/dam/mdcomp/tax/legal-publications/facts/withholding-tax-facts-2026.pdf';
+
+/** Population-weighted county rate over a list of Maryland county FIPS codes. */
+function marylandWeightedRate(fipsList) {
+  let weighted = 0;
+  let people = 0;
+  for (const fips of fipsList) {
+    const county = MARYLAND_COUNTIES[fips];
+    if (!county) throw new Error(`no 2026 Maryland county rate for ${fips}`);
+    weighted += county.rate * county.population;
+    people += county.population;
+  }
+  if (!people) throw new Error('weighted an empty list of Maryland counties');
+  return Math.round((weighted / people) * 1e6) / 1e6;
+}
+
+/** Every county outside Baltimore City: the fallback wherever no metro applies. */
+const MARYLAND_STATEWIDE_RATE = marylandWeightedRate(Object.keys(MARYLAND_COUNTIES));
+
+for (const [fips, county] of Object.entries(MARYLAND_COUNTIES)) {
+  if (!(county.rate >= 0.0225 && county.rate <= 0.032 + 0.001)) {
+    throw new Error(`${county.name} (${fips}): 2026 rate ${county.rate} outside Maryland's 2.25%-3.30% range`);
+  }
+  if (!(county.population > 10_000 && county.population < 1_200_000)) {
+    throw new Error(`${county.name} (${fips}): implausible population ${county.population}`);
+  }
+}
+if (Object.keys(MARYLAND_COUNTIES).length !== 23) {
+  throw new Error('Maryland has 23 counties besides Baltimore City');
+}
+
 const STATEWIDE_LOCAL_TAX = new Set(['MD', 'OH', 'PA', 'KY', 'IA']);
 
 /** Metros in city-specific states that actually contain a taxing jurisdiction. */
@@ -565,6 +674,8 @@ for (const [code, rate] of Object.entries(STATE_AVERAGE_LOCAL)) {
   // advertising a 1.60% rate — which is really the city rate diluted across the
   // state, and would have been badly wrong anywhere it was applied.
   if (code === 'NY') continue;
+  // Maryland's average is rebuilt from its counties' own rates; see below.
+  if (code === 'MD') continue;
   const id = `avg-${code}`;
   jurisdictions[id] = {
     id,
@@ -586,6 +697,27 @@ for (const [code, rate] of Object.entries(STATE_AVERAGE_LOCAL)) {
   };
 }
 
+/*
+ * THE ID STAYS `avg-MD`, though what it holds is new. Share links record the
+ * Baltimore "elsewhere in the metro" answer by this id (lib/share-link.ts), and
+ * a renamed id would quietly send every such link back to Baltimore City's
+ * rate. It is still a statewide average — of the counties' levied rates now,
+ * not of Tax Foundation's effective one.
+ */
+jurisdictions['avg-MD'] = {
+  id: 'avg-MD',
+  kind: 'flatRate',
+  name: 'Maryland county tax (statewide average)',
+  stateCode: 'MD',
+  rate: MARYLAND_STATEWIDE_RATE,
+  appliesTo: 'stateTaxableIncome',
+  isStateAverage: true,
+  source: MARYLAND_SOURCE,
+  note:
+    "Maryland's counties tax Maryland taxable income, and this is their 2026 rates averaged by population, leaving out Baltimore City. Your own county may be above or below it — Worcester levies 2.25%, Dorchester and Kent 3.30%.",
+  confidence: "primary rates — the Comptroller's 2026 county list — averaged by population",
+};
+
 /**
  * Metro -> applicable jurisdictions.
  *
@@ -599,6 +731,7 @@ for (const city of CITY_TAXES) {
     name: city.name,
     stateCode: city.stateCode,
     rate: city.rate,
+    ...(city.appliesTo ? { appliesTo: city.appliesTo } : {}),
     isStateAverage: false,
     source: city.source,
     note: city.note,
@@ -814,7 +947,7 @@ writeDataset(
       limitations: [
         'Thirteen cities carry their own published rate, through fourteen rules — Portland levies two, the Multnomah County preschool tax and the Metro housing tax. The others are New York City, Yonkers, Philadelphia, Detroit, Columbus, Cincinnati, Cleveland, Pittsburgh, Louisville, Kansas City, St. Louis and Baltimore. Every Indiana metro carries its counties\' rates weighted by population. Everywhere else uses the state average effective rate.',
         'Where a state average is still used it is for smaller cities, and the average is much closer to the truth there than it was for the large ones. It remains an average: an individual city may be above or below it.',
-        'It is accurate where local rates are uniform — Maryland counties all fall between 2.25% and 3.20% against a 2.4% average.',
+        'Maryland\'s counties tax Maryland taxable income, and that is the base used here, for Baltimore City and for the counties alike. Outside Baltimore City the rate is the counties\' own 2026 rates averaged by population; they run from 2.25% to 3.30%.',
         'Indiana fixes your county on 1 January and does not change it when you move, so somebody moving into Indiana owes no county tax in their first year unless they already worked there. That is not modelled, so a first year is overstated.',
         'New York City and Yonkers are modelled as OPTIONAL because the New York metro spans 22 counties and only five-borough residents pay the city tax.',
         'No New York locality outside New York City and Yonkers levies an income tax, so Buffalo, Rochester, Syracuse and Albany correctly carry none. Applying the NY state average there would invent a tax that does not exist.',

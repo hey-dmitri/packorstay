@@ -239,11 +239,19 @@ describe('seven more cities carry their own local income tax', () => {
       ['31140', 'louisville', 0.022, 'KY'], // Louisville Metro, Kentucky side
       ['28140', 'kansas-city', 0.01], // Kansas City earnings tax
       ['41180', 'st-louis', 0.01], // St. Louis earnings tax
-      ['12580', 'baltimore-city', 0.032], // Baltimore City
     ];
     for (const [metroId, id, rate, state] of expected) {
       expect(SINGLE_150K(metroId, id, state), id).toBeCloseTo(150_000 * rate, 0);
     }
+    /*
+     * Baltimore City's 3.20% is on MARYLAND TAXABLE income, not gross:
+     * $150,000 less the $3,400 standard deduction and the $800 left of the
+     * $3,200 exemption at this income (it falls to a quarter above $125,000).
+     */
+    expect(SINGLE_150K('12580', 'baltimore-city'), 'baltimore-city').toBeCloseTo(
+      (150_000 - 3_400 - 800) * 0.032,
+      0,
+    );
   });
 
   it('always exceeds the state average it replaced', () => {

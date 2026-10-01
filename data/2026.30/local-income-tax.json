@@ -16,7 +16,7 @@
   "limitations": [
     "Thirteen cities carry their own published rate, through fourteen rules — Portland levies two, the Multnomah County preschool tax and the Metro housing tax. The others are New York City, Yonkers, Philadelphia, Detroit, Columbus, Cincinnati, Cleveland, Pittsburgh, Louisville, Kansas City, St. Louis and Baltimore. Every Indiana metro carries its counties' rates weighted by population. Everywhere else uses the state average effective rate.",
     "Where a state average is still used it is for smaller cities, and the average is much closer to the truth there than it was for the large ones. It remains an average: an individual city may be above or below it.",
-    "It is accurate where local rates are uniform — Maryland counties all fall between 2.25% and 3.20% against a 2.4% average.",
+    "Maryland's counties tax Maryland taxable income, and that is the base used here, for Baltimore City and for the counties alike. Outside Baltimore City the rate is the counties' own 2026 rates averaged by population; they run from 2.25% to 3.30%.",
     "Indiana fixes your county on 1 January and does not change it when you move, so somebody moving into Indiana owes no county tax in their first year unless they already worked there. That is not modelled, so a first year is overstated.",
     "New York City and Yonkers are modelled as OPTIONAL because the New York metro spans 22 counties and only five-borough residents pay the city tax.",
     "No New York locality outside New York City and Yonkers levies an income tax, so Buffalo, Rochester, Syracuse and Albany correctly carry none. Applying the NY state average there would invent a tax that does not exist.",
@@ -219,15 +219,6 @@
       "understatementNote": "Lexington levies a city income tax above this 0.93% average and are still charged the average here, which understates them. The state's larger cities now carry their own published rate.",
       "confidence": "secondary — state average, not a city-specific rate"
     },
-    "avg-MD": {
-      "id": "avg-MD",
-      "kind": "flatRate",
-      "name": "MD average local income tax",
-      "stateCode": "MD",
-      "rate": 0.024,
-      "isStateAverage": true,
-      "confidence": "secondary — state average, not a city-specific rate"
-    },
     "avg-MI": {
       "id": "avg-MI",
       "kind": "flatRate",
@@ -274,6 +265,18 @@
       "rate": 0.0099,
       "isStateAverage": true,
       "confidence": "secondary — state average, not a city-specific rate"
+    },
+    "avg-MD": {
+      "id": "avg-MD",
+      "kind": "flatRate",
+      "name": "Maryland county tax (statewide average)",
+      "stateCode": "MD",
+      "rate": 0.031114,
+      "appliesTo": "stateTaxableIncome",
+      "isStateAverage": true,
+      "source": "Comptroller of Maryland, Withholding Tax Facts January 2026 - December 2026, county rates; weighted by Census ACS 2024 county population — https://www.marylandcomptroller.gov/content/dam/mdcomp/tax/legal-publications/facts/withholding-tax-facts-2026.pdf",
+      "note": "Maryland's counties tax Maryland taxable income, and this is their 2026 rates averaged by population, leaving out Baltimore City. Your own county may be above or below it — Worcester levies 2.25%, Dorchester and Kent 3.30%.",
+      "confidence": "primary rates — the Comptroller's 2026 county list — averaged by population"
     },
     "philadelphia": {
       "id": "philadelphia",
@@ -371,9 +374,10 @@
       "name": "Baltimore City",
       "stateCode": "MD",
       "rate": 0.032,
+      "appliesTo": "stateTaxableIncome",
       "isStateAverage": false,
       "source": "Comptroller of Maryland, Withholding Tax Facts January 2026 - December 2026 — https://www.marylandcomptroller.gov/content/dam/mdcomp/tax/legal-publications/facts/withholding-tax-facts-2026.pdf",
-      "note": "Baltimore City local income tax, 3.20% for 2026. Maryland levies this on Maryland TAXABLE income rather than on gross, so applying it to gross overstates it by roughly the deduction times the rate — about $190 a year at $150,000. That is far smaller than the error it replaces: the Maryland state average is 2.40%, understating a Baltimore City resident by about $1,200 a year."
+      "note": "Baltimore City local income tax, 3.20% for 2026, charged on Maryland taxable income — after the Maryland deduction and exemptions — as the Comptroller computes it."
     },
     "in-14020": {
       "id": "in-14020",
