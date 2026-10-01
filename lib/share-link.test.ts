@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   decodeComparison,
+  readComparison,
   encodeComparison,
   sharePath,
   SHARE_FORMAT_VERSION,
@@ -123,9 +124,11 @@ describe('round trip', () => {
   });
 
   it('keeps leading zeros in metro ids', () => {
-    // CBSA codes are five digits and some begin with zero.
+    // CBSA codes are five digits and the format allows a leading zero, though
+    // no place we cover has one yet — so this reads the format alone, before
+    // decodeComparison rejects a place that does not exist.
     const input = { ...RENTING, origin: { ...RENTING.origin, metroId: '01234' } };
-    expect(decodeComparison(encodeComparison(input)).origin.metroId).toBe('01234');
+    expect(readComparison(encodeComparison(input)).origin.metroId).toBe('01234');
   });
 
   it('preserves rates exactly, not approximately', () => {
@@ -335,4 +338,58 @@ describe('large but legitimate values', () => {
     };
     expect(decodeComparison(encodeComparison(broke))).toEqual(broke);
   });
+});
+
+/*
+ * Every one of these decoded before, and each was found by building the link by
+ * hand. The limits are the form's own, so the last test checks that nothing the
+ * form can produce is turned away.
+ */
+describe('links the calculator would never have made', () => {
+  const tweak = (edit: (c: SharedComparison) => SharedComparison) => encodeComparison(edit(structuredClone(RENTING)));
+
+  it('refuses a place that does not exist, rather than crashing the page', () => {
+    // Was: the answer screen threw "unknown location id: 99999" mid-render.
+    expect(() => decodeComparison('AuoPHQAAAQCfjQYAkL8FAQAAiA4AhGEAkL8FAQAAwAw')).toThrow(
+      /place this site does not cover/,
+    );
+  });
+
+  it('refuses absurd money, children, cars and rates', () => {
+    const cases = [
+      tweak((c) => ({ ...c, origin: { ...c.origin, grossSalary: 9e15 } })),
+      tweak((c) => ({ ...c, children: 1_000_000_000 })),
+      tweak((c) => ({ ...c, filingStatus: 'marriedJointly', earners: 3 })),
+      tweak((c) => ({ ...c, destination: { ...c.destination, cars: 1e12 } })),
+      tweak((c) => ({ ...c, origin: { ...c.origin, housing: { tenure: 'rent', monthlyRent: 1e9 } } })),
+      encodeComparison({ ...OWNING, origin: { ...OWNING.origin, housing: { ...ownHousing(), downPayment: 5 } } }),
+      encodeComparison({ ...OWNING, origin: { ...OWNING.origin, housing: { ...ownHousing(), mortgageRate: 0.3 } } }),
+    ];
+    for (const payload of cases) {
+      expect(() => decodeComparison(payload)).toThrow(/does not accept/);
+    }
+  });
+
+  it('reads "single, both earn" as the one earner it must be', () => {
+    const payload = tweak((c) => ({ ...c, earners: 2 }));
+    expect(decodeComparison(payload).earners).toBe(1);
+    const couple = tweak((c) => ({ ...c, filingStatus: 'marriedJointly', earners: 2 }));
+    expect(decodeComparison(couple).earners).toBe(2);
+  });
+
+  it('accepts everything the form itself can produce, at its limits', () => {
+    const atLimits = encodeComparison({
+      ...OWNING,
+      children: 5,
+      earners: 2,
+      origin: { ...OWNING.origin, grossSalary: 100_000_000, cars: 12, housing: { ...ownHousing(), homePrice: 100_000_000, downPayment: 1, mortgageRate: 0.25, propertyTaxRate: 0.1 } },
+    });
+    expect(() => decodeComparison(atLimits)).not.toThrow();
+  });
+
+  function ownHousing() {
+    const h = OWNING.destination.housing;
+    if (h.tenure !== 'own') throw new Error('expected owning');
+    return h;
+  }
 });

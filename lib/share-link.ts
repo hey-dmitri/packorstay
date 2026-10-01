@@ -25,7 +25,7 @@
  * ever changes.
  */
 
-import type { FilingStatus, Housing } from '@/engine';
+import { ALL_METRO_IDS, type FilingStatus, type Housing } from '@/engine';
 
 /**
  * 2 adds a state code per city, for the 43 metros that straddle a state line,
@@ -368,6 +368,17 @@ export function encodeComparison(input: SharedComparison): string {
  * show someone a confident answer to a question they never asked.
  */
 export function decodeComparison(payload: string): SharedComparison {
+  const decoded = readComparison(payload);
+  checkWithinFormLimits(decoded);
+  return decoded;
+}
+
+/**
+ * The wire format alone: what the bytes say, before anyone asks whether it is
+ * a comparison the calculator accepts. Exported for the format's own tests,
+ * which need to round-trip ids no real place has.
+ */
+export function readComparison(payload: string): SharedComparison {
   if (!/^[A-Za-z0-9_-]+$/.test(payload)) throw new Error('share link is not valid');
 
   const r = new Reader(fromBase64Url(payload));
@@ -402,10 +413,78 @@ export function decodeComparison(payload: string): SharedComparison {
     datasetVersion: `${year}.${minor}`,
     filingStatus,
     children,
-    earners,
+    /*
+     * One adult cannot be two earners. The form resets this when the status
+     * changes, but a link from before that rule — or one typed by hand — can
+     * still carry "single, both earn", and the engine would charge that single
+     * person two Social Security wage caps. Read as one, which is the only
+     * thing it can mean.
+     */
+    earners: MARRIED_STATUSES.has(filingStatus) ? earners : 1,
     origin,
     destination,
   };
+}
+
+const MARRIED_STATUSES = new Set<FilingStatus>(['marriedJointly', 'marriedSeparately']);
+
+/**
+ * WHAT THE FORM WOULD HAVE LET SOMEBODY TYPE, AND NOTHING ELSE.
+ *
+ * The format is a string of unbounded integers, so a hand-made link could say
+ * a salary of $9,000,000,000,000,000, a billion children, a trillion cars or a
+ * 500% down payment, and every one of them decoded. The page did its best with
+ * them; the share card printed "$5013000000M" over the top of its own city
+ * rows, under the site's name, at a URL anyone could pass around.
+ *
+ * Each limit is the form's own (components/fields.tsx, city-panel.tsx and the
+ * option lists in lib/use-comparison-form.ts), so no link the site itself made
+ * can fail here. Rejecting rather than clamping follows decodeComparison's own
+ * rule: quietly answering a different question than the link asked is worse
+ * than saying it could not be read.
+ *
+ * And the place must exist. A well-formed link naming location 99999 used to
+ * decode, pass the page's check, and throw inside the answer screen's render —
+ * leaving the page on its loading skeleton for good, with no error page to
+ * catch it. The same would happen to any old link whose place a later release
+ * dropped.
+ */
+const LIMITS = {
+  money: 100_000_000, // MoneyField's max
+  cars: 12, // CountField's max
+  children: 5, // CHILD_OPTIONS
+  earners: 2, // EARNER_OPTIONS
+  downPayment: 1, // PercentField's default max, 100%
+  mortgageRate: 0.25,
+  propertyTaxRate: 0.1,
+} as const;
+
+const KNOWN_PLACES = new Set(ALL_METRO_IDS);
+
+function checkWithinFormLimits(input: SharedComparison): void {
+  const outOfRange = () => new Error('share link holds values the calculator does not accept');
+
+  if (input.children > LIMITS.children) throw outOfRange();
+  if ((input.earners ?? 1) > LIMITS.earners) throw outOfRange();
+
+  for (const city of [input.origin, input.destination]) {
+    if (!KNOWN_PLACES.has(city.metroId)) {
+      throw new Error('share link names a place this site does not cover');
+    }
+    if (city.grossSalary > LIMITS.money || city.cars > LIMITS.cars) throw outOfRange();
+
+    const h = city.housing;
+    if (h.tenure === 'rent') {
+      if (h.monthlyRent > LIMITS.money) throw outOfRange();
+    } else if (
+      h.homePrice > LIMITS.money ||
+      h.downPayment > LIMITS.downPayment ||
+      h.mortgageRate > LIMITS.mortgageRate ||
+      h.propertyTaxRate > LIMITS.propertyTaxRate
+    ) {
+      throw outOfRange();
+    }
+  }
 }
 
 /** The path a comparison lives at. */

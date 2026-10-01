@@ -78,7 +78,7 @@ export default async function SharedResult({
   if (comparison) return <Answer initial={comparison} />;
 
   return (
-    <main className="flex min-h-0 flex-1 items-center justify-center px-4 py-10">
+    <main id="main" className="flex min-h-0 flex-1 items-center justify-center px-4 py-10">
       <div
         className="max-w-md rounded-lg border p-6 text-center"
         style={{ borderColor: 'var(--rule-strong)', background: 'var(--surface)' }}
