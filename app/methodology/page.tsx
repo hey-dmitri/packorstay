@@ -10,6 +10,7 @@ import { PageShell, Prose } from '@/components/page-shell';
 import {
   ALL_STATE_CODES,
   allMetros,
+  defaultSalaryFor,
   medianEarnings,
   mortgageRateSource,
   TOO_CLOSE_FLOOR,
@@ -18,7 +19,6 @@ import {
   formatUSD,
   stateRules,
 } from '@/engine';
-import { DEFAULT_SALARY } from '@/lib/use-comparison-form';
 import { ReportProblem } from '@/components/report-problem';
 import { DATASET_VERSION } from '@/engine';
 import { SITE_NAME } from '@/lib/site';
@@ -531,7 +531,7 @@ answer          =  in your pocket THERE  −  in your pocket HERE`}</pre>
         </p>
         <p>
           Before either city is chosen there is nothing local to use, so the box opens on the US
-          median of <strong>{formatUSD(DEFAULT_SALARY)}</strong>. The published figure is{' '}
+          median of <strong>{formatUSD(defaultSalaryFor())}</strong>. The published figure is{' '}
           <strong>$61,657</strong> — Census ACS 2024, table S2001, median earnings for full-time,
           year-round workers, the same release as everything else here — and like every other 2024
           figure on this site it is brought forward to today&rsquo;s money, which is where the
