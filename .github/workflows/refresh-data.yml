@@ -25,11 +25,10 @@ jobs:
 
       - run: npm ci
 
-      # A refresh must never rewrite a shipped release in place. Share links
-      # resolve by version (engine/datasets.ts), so editing data/<current>/
-      # would change the numbers under every link already pinned to it — the
-      # exact failure PROJECT.md §9.2 exists to prevent. Cut a new dated
-      # release first and build into that; the old one stays readable forever.
+      # A refresh must never rewrite a shipped release in place (data/README.md
+      # rule 2): every release stays readable, and the test suite checks each
+      # still computes what it did when it shipped. Cut a new dated release
+      # first and build into that.
       - name: Cut a new dataset release
         id: cut
         run: node scripts/cut-dataset-version.mjs
@@ -93,8 +92,8 @@ jobs:
           {
             echo "Automated quarterly refresh, cut as a NEW dataset release: \`${{ steps.cut.outputs.version }}\`."
             echo
-            echo "\`data/${{ steps.cut.outputs.previous }}/\` is untouched, so links already shared keep"
-            echo "resolving to the numbers they were made with."
+            echo "\`data/${{ steps.cut.outputs.previous }}/\` is untouched. Once merged, every link —"
+            echo "including ones already shared — is answered with this release (PROJECT.md §9.2)."
             echo
             echo "**Nothing here is live until you merge it.** Vercel builds a preview of this"
             echo "branch — open it, check a city you know on the \`/data\` page, then merge or close."
@@ -117,7 +116,13 @@ jobs:
           title: 'Quarterly data refresh'
           commit-message: 'Refresh dataset from upstream federal sources'
           delete-branch: true
+          # Both files the cut rewrites. engine/current-dataset.ts is the one that
+          # says which release the site computes with; it was split out of
+          # datasets.ts on 2026-08-19 and never added here, so a merged refresh
+          # would have shipped the new release's files while the site went on
+          # computing with the old one — silently, with every check green.
           add-paths: |
             data/**
             engine/datasets.ts
+            engine/current-dataset.ts
           body-path: .pr-body.md
