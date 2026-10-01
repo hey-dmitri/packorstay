@@ -9,6 +9,7 @@
 import {
   breakEvenSentence,
   compare,
+  DATASET_VERSION,
   formatPercent,
   formatUSD,
   metro,
@@ -31,10 +32,26 @@ export function jurisdictionsFor(city: SharedCity, version?: string) {
   );
 }
 
+/**
+ * A shared link, computed against TODAY'S data — not the release it was made with.
+ *
+ * The link still carries the version it was made with, and this used to replay
+ * it. But only the preview text and the card ever did: the answer screen has
+ * always computed at the current release, because pulling an old release into
+ * the browser is the 0.6MB-per-version cost the dataset split removed. So an
+ * old link said "$9,392 a year better off" in its preview and on its card and
+ * "+$9,144" on the page it opened. Three surfaces, two answers.
+ *
+ * The decision (2026-10-01) is that an old link showing new numbers is fine —
+ * the inputs are the sender's, the prices and taxes are this year's, which is
+ * also what the reader would get by typing the same thing in. What is not fine
+ * is the page, its preview and its picture disagreeing. So all three compute
+ * here, at the current release, and agree by construction.
+ */
 export function comparisonFromShared(input: SharedComparison): ComparisonResult {
   return compare(
     {
-      datasetVersion: input.datasetVersion,
+      datasetVersion: DATASET_VERSION,
       household: {
         filingStatus: input.filingStatus,
         children: input.children,
@@ -44,10 +61,8 @@ export function comparisonFromShared(input: SharedComparison): ComparisonResult 
       destination: input.destination,
     },
     {
-      origin: { localJurisdictions: jurisdictionsFor(input.origin, input.datasetVersion) },
-      destination: {
-        localJurisdictions: jurisdictionsFor(input.destination, input.datasetVersion),
-      },
+      origin: { localJurisdictions: jurisdictionsFor(input.origin) },
+      destination: { localJurisdictions: jurisdictionsFor(input.destination) },
     },
   );
 }

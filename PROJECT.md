@@ -410,13 +410,12 @@ link is pinned to. Only the current release is bundled eagerly now (`engine/curr
 it. **The first page is 1,202 KB.**
 
 `datasetBundle()` stayed synchronous, so nothing in the engine changed shape. What is new is
-`loadDataset(version)`, awaited in the only two places that replay a pinned link — the shared page's
-metadata and the share card — both already async. The browser never needs an older release at all:
-the interactive form recomputes at the current version by construction.
+`loadDataset(version)`, for reading an older release on purpose. Since 2026-10-01 nothing on the site
+does: shared links compute at the current release everywhere (§9.2), so neither the browser nor the
+server needs an older one to answer a link.
 
 **A shipped release that has not been loaded throws.** Falling back to the current one would answer
-with this year's numbers under a link that promises the sender's, which is the exact failure §9.2
-exists to rule out and would be invisible. An *unknown* version still falls back, because there is
+with this year's numbers to a caller that asked for another year's, and it would be invisible. An *unknown* version still falls back, because there is
 nothing else it could do. Pinned by `engine/dataset-loading.test.ts`; the test suite loads every
 release up front through `engine/test-setup.ts` so the sweeps over `ALL_DATASET_VERSIONS` read as
 they did before.
@@ -487,11 +486,22 @@ or text without wrapping.
 
 ### 9.2 Dataset versioning — why it matters
 
-The link carries the dataset version, and the app retains historical dataset versions. This
-guarantees the requirement that **the recipient sees byte-identical numbers to the sender**, even
-if the underlying government data is refreshed months later. Without this, links silently rot.
+The link carries the dataset version it was made with, and the app retains every historical
+release. Old releases must never be deleted or edited.
 
-Old dataset versions must never be deleted.
+**What a link shows changed on 2026-10-01.** The original requirement was that the recipient sees
+byte-identical numbers to the sender, even after a refresh. In practice only the link preview and
+the share card ever replayed the pinned release; the answer page computed at the current one,
+because loading an old release into the browser is the cost the dataset split removed. So an old
+link said one figure in its preview and another on the page.
+
+The decision was to drop byte-identical replay rather than ship old releases to the browser: **a
+shared link recomputes the sender's inputs against today's data**, on the page, in the preview and
+on the card alike (`lib/shared-comparison.ts`). The inputs are the sender's; the taxes and prices
+are current — which is also what the reader would get by typing the same thing in. What must never
+happen is the three surfaces disagreeing.
+
+The version still travels in the link, so a future change of mind has the information it needs.
 
 ### 9.3 Share card
 
@@ -783,7 +793,7 @@ data/<version>/sources/   ──►  scripts/build-metros.mjs           ──�
   outage must not be able to break a deployment, and two builds of the same commit must produce
   identical numbers.
 - Dataset directories are **immutable once shipped**. Old versions are never deleted or edited —
-  this is what guarantees §9.2 (shared links never change).
+  every release stays readable, and a link still names the one it was made with (§9.2).
 - A new data release creates a **new** dated directory (`2026.2/`), leaving `2026.1/` intact.
 - Scripts must include sanity checks (range assertions, row counts, null checks) that fail loudly
   rather than emitting a corrupt dataset.

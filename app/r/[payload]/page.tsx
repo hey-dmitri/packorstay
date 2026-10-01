@@ -5,7 +5,6 @@ import { Answer } from '@/components/answer';
 import { cardPath } from '@/lib/share-card';
 import { comparisonFromShared, describeComparison } from '@/lib/shared-comparison';
 import { decodeComparison, type SharedComparison } from '@/lib/share-link';
-import { loadDataset } from '@/engine';
 import { SITE_NAME } from '@/lib/site';
 
 /**
@@ -23,13 +22,6 @@ export async function generateMetadata({
 
   try {
     const shared = decodeComparison(payload);
-    /*
-      A link pinned to an older release needs that release fetched before it can
-      be replayed. Only the current one is bundled eagerly — see
-      engine/datasets.ts — and a no-op for anything already in memory, which is
-      every link made since the last refresh.
-    */
-    await loadDataset(shared.datasetVersion);
     const summary = describeComparison(comparisonFromShared(shared));
     return {
       title: `${summary.title} — ${SITE_NAME}`,
@@ -59,9 +51,9 @@ export async function generateMetadata({
 /**
  * A shared comparison.
  *
- * The payload carries every input plus the dataset version, so this recomputes
- * to exactly what the sender saw — including years later, after the underlying
- * federal data has been refreshed (PROJECT.md section 9.2).
+ * The payload carries every input the sender chose, and this recomputes them
+ * against today's data — the same release the preview and the card use, so the
+ * three always agree (PROJECT.md section 9.2, and comparisonFromShared).
  *
  * Next 16 makes route params a Promise, hence the await.
  */

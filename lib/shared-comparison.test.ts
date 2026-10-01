@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
+import { DATASET_VERSION, formatPercent, formatUSD } from '@/engine';
+
 import { cardFilename, cardPath } from './share-card';
 import { decodeComparison, encodeComparison, type SharedComparison } from './share-link';
 import {
@@ -30,11 +32,31 @@ const CHICAGO_TO_AUSTIN: SharedComparison = {
 };
 
 describe('comparisonFromShared', () => {
-  it('reproduces the engine result for a decoded link', () => {
+  it('computes a decoded link', () => {
     const result = comparisonFromShared(CHICAGO_TO_AUSTIN);
-    expect(Math.round(result.delta)).toBe(-9_680);
+    expect(result.delta).toBeLessThan(0); // a $25K pay cut into a cheaper city
     expect(result.origin.metroId).toBe('16980');
     expect(result.destination.tax.state).toBe(0); // Texas
+  });
+
+  /*
+   * The link says 2026.1; the answer is today's. The page computes at the
+   * current release, so the preview and the card have to as well, or an old
+   * link quotes one figure in the chat and another on the page it opens.
+   */
+  it('answers an old link with the current release, as the page does', () => {
+    const result = comparisonFromShared(CHICAGO_TO_AUSTIN);
+    expect(result.datasetVersion).toBe(DATASET_VERSION);
+    const asIfNew = comparisonFromShared({ ...CHICAGO_TO_AUSTIN, datasetVersion: DATASET_VERSION });
+    expect(result.delta).toBe(asIfNew.delta);
+  });
+
+  it('never prints a version it did not compute with', () => {
+    // A forged or future version used to be carried onto the card's footer
+    // while the numbers came from the current release.
+    expect(comparisonFromShared({ ...CHICAGO_TO_AUSTIN, datasetVersion: '2099.1' }).datasetVersion).toBe(
+      DATASET_VERSION,
+    );
   });
 
   it('a link round trip produces an identical result', () => {
@@ -155,8 +177,18 @@ describe('jurisdictionsFor', () => {
 describe('describeComparison', () => {
   const summary = describeComparison(comparisonFromShared(CHICAGO_TO_AUSTIN));
 
+  /*
+   * The figures are read off the result rather than written in: the link is
+   * answered at the current release, so they move with every data refresh. What
+   * these pin is the wording around them.
+   */
+  const result = comparisonFromShared(CHICAGO_TO_AUSTIN);
+  const breakEven = result.breakEvenSalary!;
+
   it('states the direction and the amount in the title', () => {
-    expect(summary.title).toBe('Chicago, IL → Austin, TX: $9,680 a year worse off');
+    expect(summary.title).toBe(
+      `Chicago, IL → Austin, TX: ${formatUSD(Math.abs(result.delta))} a year worse off`,
+    );
   });
 
   it('puts the actionable break-even figure in the description', () => {
@@ -164,12 +196,14 @@ describe('describeComparison', () => {
     // alone left the reader to subtract the salary themselves to find out
     // whether that was good news or bad — and here it is bad, matching the
     // "worse off" title rather than reading against it.
-    expect(summary.description).toMatch(/\$139,163/);
+    expect(summary.description).toContain(formatUSD(breakEven));
     // The gap and what it is measured against are abbreviated: a link preview
     // is truncated at about 150 characters, so every digit spent on precision
     // nobody quotes is a word of the sentence that gets cut.
-    expect(summary.description).toMatch(/\$14,163 more than the \$125K you'd be paid there/);
-    expect(summary.description).toMatch(/21\.0% less spare cash/);
+    expect(summary.description).toContain(
+      `${formatUSD(breakEven - 125_000)} more than the $125K you'd be paid there`,
+    );
+    expect(summary.description).toContain(`${formatPercent(Math.abs(result.deltaPct))} less spare cash`);
   });
 
   it('drops the percentage when the origin city leaves nothing to measure', () => {
