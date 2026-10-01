@@ -229,7 +229,17 @@ const CITY_TAXES = [
  * $1,750 a year too much, on top of everything else Portland costs.
  *
  * The thresholds are NOT indexed, unlike the Metro tax below. The rate rises
- * by 0.8 points in 2027, to 2.3% and 3.8%, thresholds unchanged.
+ * by 0.8 points later, to 2.3% and 3.8%, thresholds unchanged — in 2027 by
+ * multco.us, in 2028 by portland.gov (checked 2026-10-01; the two disagree).
+ * Tax year 2026 is unaffected either way.
+ *
+ * A HEAD OF HOUSEHOLD IS ON THE JOINT THRESHOLDS, exactly as with the Metro
+ * tax below. The Portland Revenue Division, which administers both taxes,
+ * lists head of household among the "joint" filing statuses for Preschool for
+ * All as well as for SHS (https://www.portland.gov/revenue/personal-tax,
+ * checked 2026-10-01). This carried no head-of-household schedule, so the
+ * engine fell back to the single one: a single parent with $220,000 of Oregon
+ * taxable income was charged $1,425 a year where the county asks $300.
  */
 const PORTLAND_MULTNOMAH = {
   id: 'portland-multnomah',
@@ -244,6 +254,11 @@ const PORTLAND_MULTNOMAH = {
       { from: 250_000, rate: 0.03 },
     ],
     marriedJointly: [
+      { from: 0, rate: 0 },
+      { from: 200_000, rate: 0.015 },
+      { from: 400_000, rate: 0.03 },
+    ],
+    headOfHousehold: [
       { from: 0, rate: 0 },
       { from: 200_000, rate: 0.015 },
       { from: 400_000, rate: 0.03 },

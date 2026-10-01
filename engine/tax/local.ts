@@ -186,10 +186,16 @@ export function computeLocalTax(
 
     case 'bracketed': {
       /*
-       * No locality here publishes a head-of-household schedule, so this asks
-       * for one and falls back to the schedule the filer would otherwise be on.
-       * New York City does publish one; when it is added, this picks it up
-       * without further change.
+       * A locality's own head-of-household schedule wins where the data
+       * carries one — New York City and both Portland taxes do. Where it does
+       * not, a head of household falls back to the single schedule.
+       *
+       * That fallback is a guess, and it is the expensive direction for the
+       * Portland taxes, whose joint thresholds are $75,000 higher: before the
+       * Preschool for All tax was given its head-of-household schedule, a
+       * single parent on $220,000 was charged on the single one. So a
+       * bracketed locality should always say what a head of household does,
+       * even when the answer is "the same as joint".
        */
       const schedule = scheduleFor(inputs.filingStatus, {
         headOfHouseholdBasis: rules.brackets.headOfHousehold ? 'own' : 'single',
