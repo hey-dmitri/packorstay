@@ -261,3 +261,45 @@ describe('home price prefill', () => {
     }
   });
 });
+
+/*
+ * THE LOCAL CURVE HAS THE NATIONAL CURVE'S FLOOR.
+ *
+ * Rent and home price are scaled by (income / local median income) raised to
+ * the national elasticity, and nothing stopped that ratio falling to zero. A
+ * salary of $0 — what the box holds while somebody is still typing — put a
+ * Dallas one-bedroom at $4 a month and a Dallas home at $10,185. The national
+ * curve has always gone flat below its first published point ($7,500 of
+ * base-year income); the local one now stops there too.
+ */
+describe('housing prefill at very low incomes', () => {
+  const DALLAS = '19100';
+  // The first published point, restated in today's dollars the way the
+  // prefill restates any income before it meets the curve.
+  const floorToday = INCOME_RENT_CURVE.points[0].income * priceFactor('basket');
+
+  it('does not price a Dallas one-bedroom at $4 a month on a salary of $0', () => {
+    // (7,500 / 61,588 median renter income) ^ 0.5389 of the $1,393 median
+    // one-bedroom, restated to today's rents: about $480. It was $4.
+    expect(rentDefault(DALLAS, 0, 1)).toBeGreaterThan(400);
+    expect(rentDefault(DALLAS, 0, 1)).toBe(rentDefault(DALLAS, floorToday, 1));
+  });
+
+  it('is flat below the floor and rises above it, as the national curve does', () => {
+    expect(rentDefault(DALLAS, 1_000, 1)).toBe(rentDefault(DALLAS, 0, 1));
+    expect(rentDefault(DALLAS, floorToday * 2, 1)).toBeGreaterThan(rentDefault(DALLAS, 0, 1));
+    expect(homePriceDefault(DALLAS, 0)).toBe(homePriceDefault(DALLAS, floorToday));
+    expect(homePriceDefault(DALLAS, floorToday * 2)).toBeGreaterThan(homePriceDefault(DALLAS, 0));
+  });
+
+  it('never quotes anywhere less than a fifth of its median rent', () => {
+    // The floor factor is (7,500 / local median renter income) ^ 0.54, which
+    // stays above 0.2 for any median under about $150,000 — every metro here.
+    // The exact bound matters less than that one exists.
+    for (const id of ALL_METRO_IDS) {
+      const d = housingDefaults(id);
+      const median = d.rentByBedrooms?.[1] ?? d.medianRentMonthly;
+      expect(rentDefault(id, 0, 1), id).toBeGreaterThan(0.2 * median);
+    }
+  });
+});

@@ -315,9 +315,25 @@ export function rentFactorForIncome(income: USD, version?: string): number {
  * measuring. The local PRICE is untouched, so differences between cities — the
  * thing this site exists to measure — survive at full strength.
  */
-function localIncomeFactor(income: USD, medianIncome: USD | undefined, elasticity: number): number | null {
+/*
+ * THE FLOOR IS THE NATIONAL CURVE'S OWN. The national formula goes flat below
+ * its first published point — the Census does not publish what households
+ * under $7,500 pay, and a constant elasticity has no business guessing — but
+ * this one kept falling all the way to zero. A salary of $0 put a one-bedroom
+ * in Dallas at $4 a month, and an empty salary box is exactly what a reader
+ * has while still typing.
+ *
+ * So below the first point the local factor stops falling too, at the income
+ * that point describes. Above it nothing changes.
+ */
+function localIncomeFactor(
+  income: USD,
+  medianIncome: USD | undefined,
+  elasticity: number,
+  floorIncome: USD,
+): number | null {
   if (!medianIncome || medianIncome <= 0) return null; // suppressed in a few small metros
-  return (Math.max(1, income) / medianIncome) ** elasticity;
+  return (Math.max(1, floorIncome, income) / medianIncome) ** elasticity;
 }
 
 export interface HomeValueCurve {
@@ -379,6 +395,7 @@ export function homeValueFactorForIncome(
       income,
       housingDefaults(metroId, version, stateCode).medianOwnerIncome,
       curve.elasticity,
+      curve.points[0].income,
     );
     if (local !== null) return local;
   }
@@ -436,7 +453,12 @@ export function rentDefault(
   const atBaseYear = toBaseYearIncome(income, version);
   const curve = incomeRentCurve(version);
   const local = curve
-    ? localIncomeFactor(atBaseYear, defaults.medianRenterIncome, curve.elasticity)
+    ? localIncomeFactor(
+        atBaseYear,
+        defaults.medianRenterIncome,
+        curve.elasticity,
+        curve.points[0].income,
+      )
     : null;
   const factor = local ?? rentFactorForIncome(atBaseYear, version);
   return Math.round(base * factor * priceFactor('rent', version));
