@@ -2878,7 +2878,8 @@
       "personalExemption": {
         "single": 3200,
         "marriedJointly": 6400,
-        "dependent": 3200
+        "dependent": 3200,
+        "headOfHousehold": 3200
       },
       "personalCredit": {
         "single": 0,
@@ -4231,7 +4232,8 @@
       "personalExemption": {
         "single": 1000,
         "marriedJointly": 2000,
-        "dependent": 1500
+        "dependent": 1500,
+        "headOfHousehold": 1000
       },
       "personalCredit": {
         "single": 0,
@@ -5084,7 +5086,8 @@
       "personalExemption": {
         "single": 1000,
         "marriedJointly": 2000,
-        "dependent": 1000
+        "dependent": 1000,
+        "headOfHousehold": 1000
       },
       "personalCredit": {
         "single": 0,

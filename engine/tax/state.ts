@@ -1115,6 +1115,34 @@ export function computeStateTax(
       : schedule;
 
   /*
+   * THE PERSONAL EXEMPTION AND CREDIT COUNT PEOPLE, NOT SCHEDULES.
+   *
+   * The joint figure is two of them — one for each spouse. A head of household
+   * is one taxpayer, and their children are counted separately as dependents.
+   * So where a state sends a head of household to its JOINT rate table, the
+   * joint table must not bring the joint exemption with it.
+   *
+   * It did, through `allowanceKey` above. Maryland, Oklahoma and New Jersey
+   * all put a head of household on the joint schedule and none of them
+   * publishes a separate head-of-household exemption, so a single parent was
+   * given two personal exemptions: an extra $3,200 in Maryland, $1,000 in each
+   * of the other two. Each state's own form lists the exemption as "yourself",
+   * plus "spouse" only on a joint return (Maryland Form 502 instruction 10,
+   * Oklahoma Form 511, NJ-1040 line 6).
+   *
+   * A head-of-household figure in the data wins where a state publishes one;
+   * otherwise it is one person's, which is the single figure.
+   */
+  const perPersonAllowance = (by: {
+    single: USD;
+    marriedJointly: USD;
+    headOfHousehold?: USD;
+  }): USD =>
+    inputs.filingStatus === 'headOfHousehold'
+      ? (by.headOfHousehold ?? by.single)
+      : (by[allowanceKey] ?? by[otherwise]);
+
+  /*
    * Shrink an allowance for income above the state's threshold. Returns it
    * untouched where the state has no phase-out, or where this is not one of
    * the allowances the state's phase-out reaches.
@@ -1378,7 +1406,7 @@ export function computeStateTax(
 
   const exemptions =
     phaseOutAllowance(
-      (rules.personalExemption[allowanceKey] ?? rules.personalExemption[otherwise]) +
+      perPersonAllowance(rules.personalExemption) +
         rules.personalExemption.dependent * dependentsCounted,
       'personalExemption',
     ) + perPersonExemption;
@@ -1477,8 +1505,7 @@ export function computeStateTax(
     applyBrackets(taxableIncome, rules.brackets[schedule] ?? rules.brackets[otherwise]);
 
   const creditsBeforePhaseOut =
-    (rules.personalCredit[allowanceKey] ?? rules.personalCredit[otherwise]) +
-    rules.personalCredit.dependent * children;
+    perPersonAllowance(rules.personalCredit) + rules.personalCredit.dependent * children;
 
   /*
    * Reduce the credit for income above the state's threshold, where the state

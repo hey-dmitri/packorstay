@@ -986,6 +986,18 @@ const HEAD_OF_HOUSEHOLD = {
     // "Taxpayers Filing Joint Returns, Head of Household, or Qualifying
     // Widows/Widowers" — one table, stated in those words.
     basis: 'marriedJointly',
+    /*
+     * ONE PERSONAL EXEMPTION, NOT TWO. The joint rate table does not bring
+     * the joint exemption with it: Form 502 lists the exemption as "Yourself"
+     * and "Spouse", and a head of household has no spouse on the return. Left
+     * unset, a single parent fell back to the joint $6,400 and was given an
+     * extra $3,200 — about $250 a year once county tax is counted.
+     * Resident booklet, instruction 10:
+     * https://www.marylandcomptroller.gov/content/dam/mdcomp/tax/instructions/2025/resident-booklet.pdf
+     * (checked 2026-10-01). Phased out on the joint thresholds, which the
+     * allowance phase-out below already carries.
+     */
+    personalExemption: 3_200,
     source: 'https://www.marylandtaxes.gov/individual/income/tax-info/tax-rates.php',
     checked: '2026-08-15',
   },
@@ -1191,6 +1203,15 @@ const HEAD_OF_HOUSEHOLD = {
      * bluntly: "1 or 3" against "2, 4, or 5", where 4 is head of household.
      */
     basis: 'marriedJointly',
+    /*
+     * Line 6, "Regular exemptions": $1,000 for yourself, and $1,000 for a
+     * spouse or civil union partner only on a joint return. Table B is a rate
+     * schedule, not an exemption count, and a head of household left unset
+     * fell back to the joint $2,000. NJ-1040 instructions:
+     * https://www.nj.gov/treasury/taxation/pdf/current/1040i.pdf
+     * (checked 2026-10-01).
+     */
+    personalExemption: 1_000,
     source: 'https://www.nj.gov/treasury/taxation/pdf/current/njtaxratesch.pdf',
     checked: '2026-08-15',
   },
@@ -1278,6 +1299,15 @@ const HEAD_OF_HOUSEHOLD = {
      */
     basis: 'marriedJointly',
     standardDeduction: 9_350,
+    /*
+     * One $1,000 exemption for "Yourself", and one for a spouse only on a
+     * joint return (or a married head of household whose spouse had no income,
+     * which this site cannot ask about). Form 511 instructions:
+     * https://oklahoma.gov/content/dam/ok/en/tax/documents/forms/individuals/current/511-Pkt.pdf
+     * (checked 2026-10-01). Left unset, a head of household fell back to the
+     * joint $2,000.
+     */
+    personalExemption: 1_000,
     source: 'https://oklahoma.gov/tax/individuals/pay-taxes.html',
     checked: '2026-08-15',
   },
