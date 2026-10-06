@@ -800,8 +800,7 @@ data/<version>/sources/   ──►  scripts/build-metros.mjs           ──�
 
 ### 16.3 Review workflow
 
-The project owner does not write code and will never run anything locally. Every stage must end
-in something they can **open and look at**.
+Every stage must end in something the owner can **open and look at**.
 
 **Stages 0–3 (engine and data, no UI yet)** — results are published as standalone web pages the
 owner can open directly from the conversation. Worked tax examples, dataset browsers, and
