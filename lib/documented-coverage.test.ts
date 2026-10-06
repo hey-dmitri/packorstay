@@ -26,7 +26,11 @@ import {
 } from '@/engine';
 
 const taxing = ALL_STATE_CODES.map((c) => stateRules(c)).filter((s) => s.hasWageIncomeTax);
-const readme = readFileSync(new URL('../README.md', import.meta.url), 'utf8');
+// The status table and the known-gaps list moved out of the README into
+// docs/STATUS.md. They are still public claims, so both files are checked.
+const readme = ['../README.md', '../docs/STATUS.md']
+  .map((p) => readFileSync(new URL(p, import.meta.url), 'utf8'))
+  .join('\n');
 
 describe('what the README claims', () => {
   it('states the real number of low-income credits', () => {
